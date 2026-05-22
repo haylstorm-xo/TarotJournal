@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Tarot Journal</title>
+  <title>Mystic Journal & Calendar</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -93,17 +93,6 @@
       border-color: var(--accent-gold);
       transform: translateY(-3px);
       box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    }
-
-    /* Tiny indicator dot showing a day has saved data */
-    .has-data::after {
-      content: '';
-      position: absolute;
-      bottom: 8px;
-      width: 5px;
-      height: 5px;
-      background-color: var(--accent-gold);
-      border-radius: 50%;
     }
 
     /* --- BACKDROP & MODAL ARCHITECTURE --- */
@@ -238,7 +227,6 @@
     .pill-energized::before { background-color: #f77f00; }
     .pill-tired::before { background-color: #a8dadc; }
 
-    /* Fixed cut-off class here */
     .save-btn {
       width: 100%;
       background-color: var(--accent-gold);
@@ -316,10 +304,18 @@
 
   <script>
     // 1. --- SUPABASE SETUP ---
-    // Remember to put your own actual project codes here when ready!
-    const SUPABASE_URL = "https://hxvggfgbxlfodhwcrlpg.supabase.co/rest/v1/";
-    const SUPABASE_KEY = "sb_publishable_dOsp-_F6er6b3dhdS-kR7Q_Seam5Ekr";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = "https://hxvggfgbxlfodhwcrlpg.supabase.co";
+    const SUPABASE_KEY = "YOUR_COPIED_PUBLISHABLE_KEY_HERE"; // Put your sb_publishable key string here!
+
+    let supabaseClient = null;
+    try {
+      if (SUPABASE_KEY && !SUPABASE_KEY.includes("YOUR_COPIED_PUBLISHABLE_KEY")) {
+        // Use window.supabase to target the script library asset securely
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (err) {
+      console.error("Initialization warning:", err);
+    }
 
     // 2. --- STATE ARCHITECTURE ---
     let selectedMotivation = "";
@@ -333,8 +329,8 @@
 
     const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-    // 3. --- GENERATE CALENDAR DRAW FRAME ---
-    const startingOffset = 5; 
+    // 3. --- GENERATE CALENDAR ---
+    const startingOffset = 5; // May 2026 starts on Friday
     const totalDaysInMonth = 31;
 
     for (let i = 0; i < startingOffset; i++) {
@@ -399,7 +395,7 @@
 
     document.getElementById('close-modal-btn').addEventListener('click', () => backdrop.style.display = 'none');
 
-    // 5. --- DATABASE TRANSFER ACTION ---
+    // 5. --- SAVE ACTION ---
     document.getElementById('save-day-btn').addEventListener('click', async () => {
       const journalPayload = {
         date: activeSelectedDate,
@@ -408,13 +404,19 @@
         moods: selectedMoods
       };
 
-      const { data, error } = await supabase
+      if (!supabaseClient) {
+        alert(`Demo Mode: Data logged locally for ${activeSelectedDate}! (To connect live, add your key string)`);
+        backdrop.style.display = 'none';
+        return;
+      }
+
+      const { data, error } = await supabaseClient
         .from('journal_entries')
         .upsert([journalPayload], { onConflict: 'date' }); 
 
       if (error) {
         console.error('Database Sync Failure:', error.message);
-        alert('Could not save data: ' + error.message);
+        alert('Database Sync Error: ' + error.message);
       } else {
         alert(`Journal log for ${activeSelectedDate} safely stored in Supabase!`);
         backdrop.style.display = 'none';
