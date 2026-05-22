@@ -1,2 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystic Journal Modal</title>
+  <style>
+    /* Global Styles & Theme Variables */
+    :root {
+      --bg-dark: #12101c;
+      --panel-bg: #1e1b29;
+      --accent-gold: #c4a46a;
+      --text-main: #ffffff;
+      --text-muted: #8b869c;
+      --border-purple: #4c3a6b;
+      --active-purple: #5c3d91;
+    }
 
-<!DOCTYPE html><html><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width"/><meta name="next-head-count" content="2"/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/_next/static/chunks/webpack-9339c7e225139a0a.js" defer=""></script><script src="/_next/static/chunks/framework-64ad27b21261a9ce.js" defer=""></script><script src="/_next/static/chunks/main-bbffbf57667a37fe.js" defer=""></script><script src="/_next/static/chunks/pages/_app-e65cab46ddbbf70c.js" defer=""></script><script src="/_next/static/chunks/6e8d85aa-9c83878779307eb3.js" defer=""></script><script src="/_next/static/chunks/736-d31996bba0c9f913.js" defer=""></script><script src="/_next/static/chunks/pages/index-b04c02c0564f3ac2.js" defer=""></script><script src="/_next/static/ypzg7tUaWGGLQaFeUA19n/_buildManifest.js" defer=""></script><script src="/_next/static/ypzg7tUaWGGLQaFeUA19n/_ssgManifest.js" defer=""></script></head><body><div id="__next"><div style="min-height:100vh;background:#0f0d1a;display:flex;align-items:center;justify-content:center"><div style="color:#b89967;font-family:&#x27;Julius Sans One&#x27;,sans-serif;font-size:13px;letter-spacing:3px">LOADING...</div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/","query":{},"buildId":"ypzg7tUaWGGLQaFeUA19n","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>
+    body {
+      background-color: var(--bg-dark);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+
+    /* Modal Container */
+    .modal-card {
+      background-color: var(--panel-bg);
+      width: 100%;
+      max-width: 440px;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Close Button */
+    .close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .close-btn:hover { color: var(--text-main); }
+
+    /* Header Styling */
+    .date-sub {
+      color: var(--accent-gold);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .date-main {
+      font-family: 'Georgia', serif;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0 0 6px 0;
+    }
+
+    .moon-phase {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    /* Section Headers */
+    .section-title {
+      color: var(--accent-gold);
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: 24px 0 12px 0;
+    }
+
+    /* Input Dropdown Field */
+    .dropdown-field {
+      width: 100%;
+      background-color: transparent;
+      border: 2px solid var(--border-purple);
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    /* Tag/Pill Button Grid Layout */
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* Pill Buttons */
+    .pill {
+      background-color: transparent;
+      border: 1px solid rgba(139, 134, 156, 0.3);
+      border-radius: 20px;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .pill:hover {
+      border-color: var(--text-muted);
+      color: var(--text-main);
+    }
+
+    /* Active States */
+    .pill.selected-motivation {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .pill.selected-mood {
+      background-color: var(--active-purple);
+      border-color: var(--border-purple);
+      color: var(--text-main);
+    }
+
+    /* Visual color dots inside Mood Pills */
+    .pill::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .pill-happy::before { background-color: #ffd166; }
+    .pill-sad::before { background-color: #118ab2; }
+    .pill-anxious::before { background-color: #ef476f; }
+    .pill-calm::before { background-color: #8338ec; }
+    .pill-energized::before { background-color: #f77f00; }
+    .pill-tired::before { background-color: #a8dadc; }
+
+    /* Action Button */
+    .save-btn {
+      width: 100%;
+      background-color: var(--accent-gold);
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      color: #312816;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="modal-card">
+    <button class="close-btn">&times;</button>
+    
+    <div class="date-sub">Friday</div>
+    <h2 class="date-main">May 22</h2>
+    <div class="moon-phase">🌙 Waxing Crescent</div>
+
+    <div class="section-title">Tarot Card</div>
+    <select id="tarot-select" class="dropdown-field">
+      <option value="The Emperor">The Emperor</option>
+      <option value="The Fool">The Fool</option>
+      <option value="The Magician">The Magician</option>
+      <option value="The High Priestess">The High Priestess</option>
+      <option value="The Empress">The Empress</option>
+    </select>
+
+    <div class="section-title">Motivation</div>
+    <div class="pill-group" id="motivation-group">
+      <button class="pill" data-value="SUPER">Super</button>
+      <button class="pill" data-value="VERY">Very</button>
+      <button class="pill" data-value="MOTIVATED">Motivated</button>
+      <button class="pill" data-value="MODERATELY">Moderately</button>
+      <button class="pill" data-value="SLIGHTLY">Slightly</button>
+      <button class="pill" data-value="NON">Non</button>
+    </div>
+
+    <div class="section-title">Mood</div>
+    <div class="pill-group" id="mood-group">
+      <button class="pill pill-happy" data-value="HAPPY">Happy</button>
+      <button class="pill pill-sad" data-value="SAD">Sad</button>
+      <button class="pill pill-anxious" data-value="ANXIOUS">Anxious</button>
+      <button class="pill pill-calm" data-value="CALM">Calm</button>
+      <button class="pill pill-energized" data-value="ENERGIZED">Energized</button>
+      <button class="pill pill-tired" data-value="TIRED">Tired</button>
+    </div>
+
+    <button class="save-btn" id="save-day-btn">Save Day</button>
+  </div>
+
+  <script>
+    // State management storage objects
+    let selectedMotivation = "";
+    let selectedMoods = [];
+
+    // --- Interactive Logic for Motivation Group (Single Selection) ---
+    const motivationPills = document.querySelectorAll('#motivation-group .pill');
+    motivationPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        motivationPills.forEach(p => p.classList.remove('selected-motivation'));
+        pill.classList.add('selected-motivation');
+        selectedMotivation = pill.getAttribute('data-value');
+      });
+    });
+
+    // --- Interactive Logic for Mood Group (Multi-Selection Allowed) ---
+    const moodPills = document.querySelectorAll('#mood-group .pill');
+    moodPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const val = pill.getAttribute('data-value');
+        if (selectedMoods.includes(val)) {
+          // Remove if clicked again
+          selectedMoods = selectedMoods.filter(item => item !== val);
+          pill.classList.remove('selected-mood');
+        } else {
+          // Add to array
+          selectedMoods.push(val);
+          pill.classList.add('selected-mood');
+        }
+      });
+    });
+
+    // --- Save Feature: Storing Selection to Browser Memory ---
+    document.getElementById('save-day-btn').addEventListener('click', () => {
+      const dailyLog = {
+        date: "2026-05-22",
+        tarot: document.getElementById('tarot-select').value,
+        motivation: selectedMotivation,
+        moods: selectedMoods
+      };
+
+      // Save structured object directly to localStorage
+      localStorage.setItem('journal_entry_2026_05_22', JSON.stringify(dailyLog));
+      
+      alert('Day log saved beautifully to browser memory!');
+      console.log('Saved Payload:', dailyLog);
+    });
+  </script>
+</body>
+</html>
