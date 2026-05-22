@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mystic Journal Modal</title>
+  <title>Mystic Journal & Calendar</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    /* Global Styles & Theme Variables */
+    /* Global Theme & Color Variables */
     :root {
       --bg-dark: #12101c;
       --panel-bg: #1e1b29;
@@ -21,26 +24,115 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
       color: var(--text-main);
+      min-height: 100vh;
     }
 
-    /* Modal Container */
+    /* --- CALENDAR INTERFACE --- */
+    .calendar-container {
+      max-width: 700px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    .calendar-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .calendar-title {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      color: var(--accent-gold);
+      margin: 0 0 8px 0;
+    }
+
+    .calendar-subtitle {
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    /* Grid Frame */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+    }
+
+    /* Day Name Labels (Mon, Tue, etc) */
+    .day-name {
+      text-align: center;
+      color: var(--accent-gold);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding-bottom: 8px;
+    }
+
+    /* Interactive Day Box */
+    .calendar-day {
+      background-color: var(--panel-bg);
+      border: 1px solid rgba(139, 134, 156, 0.15);
+      border-radius: 14px;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .calendar-day:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    /* Tiny indicator dot showing a day has saved data */
+    .has-data::after {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      width: 5px;
+      height: 5px;
+      background-color: var(--accent-gold);
+      border-radius: 50%;
+    }
+
+
+    /* --- BACKDROP & MODAL ARCHITECTURE --- */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(10, 8, 16, 0.85);
+      backdrop-filter: blur(4px);
+      display: none; /* Controlled by JS toggle */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
     .modal-card {
       background-color: var(--panel-bg);
       width: 100%;
       max-width: 440px;
       border-radius: 24px;
       padding: 32px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       box-sizing: border-box;
       position: relative;
     }
 
-    /* Close Button */
     .close-btn {
       position: absolute;
       top: 24px;
@@ -48,13 +140,11 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 20px;
+      font-size: 24px;
       cursor: pointer;
-      transition: color 0.2s;
     }
     .close-btn:hover { color: var(--text-main); }
 
-    /* Header Styling */
     .date-sub {
       color: var(--accent-gold);
       font-size: 0.85rem;
@@ -73,24 +163,19 @@
     .moon-phase {
       color: var(--text-muted);
       font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
-    /* Section Headers */
     .section-title {
       color: var(--accent-gold);
       font-size: 0.85rem;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin: 24px 0 12px 0;
+      margin: 20px 0 10px 0;
     }
 
-    /* Input Dropdown Field */
     .dropdown-field {
       width: 100%;
       background-color: transparent;
@@ -101,19 +186,14 @@
       font-size: 1rem;
       outline: none;
       cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
     }
 
-    /* Tag/Pill Button Grid Layout */
     .pill-group {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
     }
 
-    /* Pill Buttons */
     .pill {
       background-color: transparent;
       border: 1px solid rgba(139, 134, 156, 0.3);
@@ -124,7 +204,6 @@
       font-weight: 600;
       letter-spacing: 0.5px;
       cursor: pointer;
-      transition: all 0.2s ease;
       text-transform: uppercase;
     }
 
@@ -133,7 +212,6 @@
       color: var(--text-main);
     }
 
-    /* Active States */
     .pill.selected-motivation {
       border-color: var(--accent-gold);
       color: var(--accent-gold);
@@ -145,7 +223,6 @@
       color: var(--text-main);
     }
 
-    /* Visual color dots inside Mood Pills */
     .pill::before {
       content: '';
       display: inline-block;
@@ -162,7 +239,6 @@
     .pill-energized::before { background-color: #f77f00; }
     .pill-tired::before { background-color: #a8dadc; }
 
-    /* Action Button */
     .save-btn {
       width: 100%;
       background-color: var(--accent-gold);
@@ -170,108 +246,3 @@
       border-radius: 14px;
       padding: 16px;
       color: #312816;
-      font-size: 1rem;
-      font-weight: bold;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      margin-top: 24px;
-      transition: opacity 0.2s;
-    }
-
-    .save-btn:hover {
-      opacity: 0.9;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="modal-card">
-    <button class="close-btn">&times;</button>
-    
-    <div class="date-sub">Friday</div>
-    <h2 class="date-main">May 22</h2>
-    <div class="moon-phase">🌙 Waxing Crescent</div>
-
-    <div class="section-title">Tarot Card</div>
-    <select id="tarot-select" class="dropdown-field">
-      <option value="The Emperor">The Emperor</option>
-      <option value="The Fool">The Fool</option>
-      <option value="The Magician">The Magician</option>
-      <option value="The High Priestess">The High Priestess</option>
-      <option value="The Empress">The Empress</option>
-    </select>
-
-    <div class="section-title">Motivation</div>
-    <div class="pill-group" id="motivation-group">
-      <button class="pill" data-value="SUPER">Super</button>
-      <button class="pill" data-value="VERY">Very</button>
-      <button class="pill" data-value="MOTIVATED">Motivated</button>
-      <button class="pill" data-value="MODERATELY">Moderately</button>
-      <button class="pill" data-value="SLIGHTLY">Slightly</button>
-      <button class="pill" data-value="NON">Non</button>
-    </div>
-
-    <div class="section-title">Mood</div>
-    <div class="pill-group" id="mood-group">
-      <button class="pill pill-happy" data-value="HAPPY">Happy</button>
-      <button class="pill pill-sad" data-value="SAD">Sad</button>
-      <button class="pill pill-anxious" data-value="ANXIOUS">Anxious</button>
-      <button class="pill pill-calm" data-value="CALM">Calm</button>
-      <button class="pill pill-energized" data-value="ENERGIZED">Energized</button>
-      <button class="pill pill-tired" data-value="TIRED">Tired</button>
-    </div>
-
-    <button class="save-btn" id="save-day-btn">Save Day</button>
-  </div>
-
-  <script>
-    // State management storage objects
-    let selectedMotivation = "";
-    let selectedMoods = [];
-
-    // --- Interactive Logic for Motivation Group (Single Selection) ---
-    const motivationPills = document.querySelectorAll('#motivation-group .pill');
-    motivationPills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        motivationPills.forEach(p => p.classList.remove('selected-motivation'));
-        pill.classList.add('selected-motivation');
-        selectedMotivation = pill.getAttribute('data-value');
-      });
-    });
-
-    // --- Interactive Logic for Mood Group (Multi-Selection Allowed) ---
-    const moodPills = document.querySelectorAll('#mood-group .pill');
-    moodPills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const val = pill.getAttribute('data-value');
-        if (selectedMoods.includes(val)) {
-          // Remove if clicked again
-          selectedMoods = selectedMoods.filter(item => item !== val);
-          pill.classList.remove('selected-mood');
-        } else {
-          // Add to array
-          selectedMoods.push(val);
-          pill.classList.add('selected-mood');
-        }
-      });
-    });
-
-    // --- Save Feature: Storing Selection to Browser Memory ---
-    document.getElementById('save-day-btn').addEventListener('click', () => {
-      const dailyLog = {
-        date: "2026-05-22",
-        tarot: document.getElementById('tarot-select').value,
-        motivation: selectedMotivation,
-        moods: selectedMoods
-      };
-
-      // Save structured object directly to localStorage
-      localStorage.setItem('journal_entry_2026_05_22', JSON.stringify(dailyLog));
-      
-      alert('Day log saved beautifully to browser memory!');
-      console.log('Saved Payload:', dailyLog);
-    });
-  </script>
-</body>
-</html>
