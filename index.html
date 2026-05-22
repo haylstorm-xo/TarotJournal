@@ -106,7 +106,6 @@
       border-radius: 50%;
     }
 
-
     /* --- BACKDROP & MODAL ARCHITECTURE --- */
     .modal-backdrop {
       position: fixed;
@@ -239,6 +238,7 @@
     .pill-energized::before { background-color: #f77f00; }
     .pill-tired::before { background-color: #a8dadc; }
 
+    /* Fixed cut-off class here */
     .save-btn {
       width: 100%;
       background-color: var(--accent-gold);
@@ -246,3 +246,180 @@
       border-radius: 14px;
       padding: 16px;
       color: #312816;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 28px;
+    }
+    .save-btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <h1 class="calendar-title">May 2026</h1>
+      <div class="calendar-subtitle">Cosmic Journal Log</div>
+    </div>
+    
+    <div class="calendar-grid">
+      <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div>
+      <div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div>
+      <div class="day-name">Sat</div>
+      
+      <div id="days-root" style="display: contents;"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal-card">
+      <button class="close-btn" id="close-modal-btn">&times;</button>
+      
+      <div class="date-sub" id="modal-day-name">Friday</div>
+      <h2 class="date-main" id="modal-date-display">May 22</h2>
+      <div class="moon-phase">🌙 Waxing Crescent</div>
+
+      <div class="section-title">Tarot Card</div>
+      <select id="tarot-select" class="dropdown-field">
+        <option value="The Emperor">The Emperor</option>
+        <option value="The Fool">The Fool</option>
+        <option value="The Magician">The Magician</option>
+        <option value="The High Priestess">The High Priestess</option>
+        <option value="The Empress">The Empress</option>
+      </select>
+
+      <div class="section-title">Motivation</div>
+      <div class="pill-group" id="motivation-group">
+        <button class="pill" data-value="SUPER">Super</button>
+        <button class="pill" data-value="VERY">Very</button>
+        <button class="pill" data-value="MOTIVATED">Motivated</button>
+        <button class="pill" data-value="MODERATELY">Moderately</button>
+        <button class="pill" data-value="SLIGHTLY">Slightly</button>
+        <button class="pill" data-value="NON">Non</button>
+      </div>
+
+      <div class="section-title">Mood</div>
+      <div class="pill-group" id="mood-group">
+        <button class="pill pill-happy" data-value="HAPPY">Happy</button>
+        <button class="pill pill-sad" data-value="SAD">Sad</button>
+        <button class="pill pill-anxious" data-value="ANXIOUS">Anxious</button>
+        <button class="pill pill-calm" data-value="CALM">Calm</button>
+        <button class="pill pill-energized" data-value="ENERGIZED">Energized</button>
+        <button class="pill pill-tired" data-value="TIRED">Tired</button>
+      </div>
+
+      <button class="save-btn" id="save-day-btn">Save Day</button>
+    </div>
+  </div>
+
+  <script>
+    // 1. --- SUPABASE SETUP ---
+    // Remember to put your own actual project codes here when ready!
+    const SUPABASE_URL = "https://your-project-id.supabase.co";
+    const SUPABASE_KEY = "your-anonymous-public-key";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. --- STATE ARCHITECTURE ---
+    let selectedMotivation = "";
+    let selectedMoods = [];
+    let activeSelectedDate = "";
+
+    const daysRoot = document.getElementById('days-root');
+    const backdrop = document.getElementById('modal-backdrop');
+    const dateDisplay = document.getElementById('modal-date-display');
+    const dayNameDisplay = document.getElementById('modal-day-name');
+
+    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    // 3. --- GENERATE CALENDAR DRAW FRAME ---
+    const startingOffset = 5; 
+    const totalDaysInMonth = 31;
+
+    for (let i = 0; i < startingOffset; i++) {
+      const blank = document.createElement('div');
+      daysRoot.appendChild(blank);
+    }
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      const daySquare = document.createElement('div');
+      daySquare.classList.add('calendar-day');
+      daySquare.innerText = day;
+
+      const currentWeekdayIndex = (startingOffset + day - 1) % 7;
+      const dayName = weekdays[currentWeekdayIndex];
+      
+      const dayString = day < 10 ? `0${day}` : day;
+      const fullDateISO = `2026-05-${dayString}`;
+
+      daySquare.addEventListener('click', () => {
+        activeSelectedDate = fullDateISO;
+        dayNameDisplay.innerText = dayName;
+        dateDisplay.innerText = `May ${day}`;
+        
+        resetFormState();
+        backdrop.style.display = 'flex';
+      });
+
+      daysRoot.appendChild(daySquare);
+    }
+
+    // 4. --- FORM INTERACTION LOGIC ---
+    const motivationPills = document.querySelectorAll('#motivation-group .pill');
+    motivationPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        motivationPills.forEach(p => p.classList.remove('selected-motivation'));
+        pill.classList.add('selected-motivation');
+        selectedMotivation = pill.getAttribute('data-value');
+      });
+    });
+
+    const moodPills = document.querySelectorAll('#mood-group .pill');
+    moodPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const val = pill.getAttribute('data-value');
+        if (selectedMoods.includes(val)) {
+          selectedMoods = selectedMoods.filter(item => item !== val);
+          pill.classList.remove('selected-mood');
+        } else {
+          selectedMoods.push(val);
+          pill.classList.add('selected-mood');
+        }
+      });
+    });
+
+    function resetFormState() {
+      selectedMotivation = "";
+      selectedMoods = [];
+      motivationPills.forEach(p => p.classList.remove('selected-motivation'));
+      moodPills.forEach(p => p.classList.remove('selected-mood'));
+      document.getElementById('tarot-select').selectedIndex = 0;
+    }
+
+    document.getElementById('close-modal-btn').addEventListener('click', () => backdrop.style.display = 'none');
+
+    // 5. --- DATABASE TRANSFER ACTION ---
+    document.getElementById('save-day-btn').addEventListener('click', async () => {
+      const journalPayload = {
+        date: activeSelectedDate,
+        tarot: document.getElementById('tarot-select').value,
+        motivation: selectedMotivation,
+        moods: selectedMoods
+      };
+
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .upsert([journalPayload], { onConflict: 'date' }); 
+
+      if (error) {
+        console.error('Database Sync Failure:', error.message);
+        alert('Could not save data: ' + error.message);
+      } else {
+        alert(`Journal log for ${activeSelectedDate} safely stored in Supabase!`);
+        backdrop.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
